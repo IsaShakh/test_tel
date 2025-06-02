@@ -9,16 +9,23 @@ class EquipmentTypeSerializer(serializers.ModelSerializer):
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
-    type_id = serializers.PrimaryKeyRelatedField(queryset=EquipmentType.objects.all(), source='eq_type')
+    eq_type_id = serializers.PrimaryKeyRelatedField(queryset=EquipmentType.objects.all(), source='eq_type')
+    eq_type_name = serializers.CharField(source='eq_type.name', read_only=True)
 
     class Meta:
         model = Equipment
-        fields = ['id', 'type_id', 'serial_number', 'comment']
+        fields = ['id', 'eq_type_id', 'serial_number', 'comment', 'eq_type_name']
 
-    def validate_serial_number(self, value):
-        equipment_type = self.initial_data.get("type_id")
-        mask = EquipmentType.objects.get(id=equipment_type).mask
-        if not validate_serial_number_mask(value, mask):
-            raise serializers.ValidationError("Серийный номер не прошел валидацию")
-        return value
-    
+    def validate(self, attrs):
+        eq_type = attrs.get('eq_type')
+        serial = attrs.get('serial_number')
+
+        if not eq_type or not serial:
+            return attrs
+
+        if not validate_serial_number_mask(serial, eq_type.mask):
+            raise serializers.ValidationError({
+                "serial_number": f"Серийный номер не соответствует маске {eq_type.mask}"
+            })
+
+        return attrs

@@ -8,23 +8,10 @@ from app.api.services.delete_eq import delete_equipment
 from app.api.services.update_eq import update_equipment
 from app.filters import EquipmentFilter
 from app.models import Equipment, EquipmentType
+from app.api.pagination import EquipmentPagination, EquipmentTypePagination
 from .serializers import EquipmentSerializer, EquipmentTypeSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny
-
-
-class CustomPagination(PageNumberPagination):
-    """Кастомная пагинация для DTO"""
-    page_size = 10
-
-    def get_paginated_response(self, data):
-        return Response({
-            "type": "equipment_list",
-            "count": self.page.paginator.count,
-            "next": self.get_next_link(),
-            "previous": self.get_previous_link(),
-            "items": data
-        })
 
 
 class EquipmentViewSet(viewsets.ModelViewSet):
@@ -36,7 +23,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         django_filters.rest_framework.DjangoFilterBackend,
         filters.SearchFilter,
     ]
-    pagination_class = CustomPagination
+    pagination_class = EquipmentPagination
     
     def list(self, request, *args, **kwargs):
         """DTO формат"""
@@ -104,20 +91,6 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_200_OK) 
 
 
-class EquipmentTypePagination(PageNumberPagination):
-    """Кастомная пагинация для DTO"""
-    page_size = 10
-
-    def get_paginated_response(self, data):
-        return Response({
-            "type": "equipment_type_list",
-            "count": self.page.paginator.count,
-            "next": self.get_next_link(),
-            "previous": self.get_previous_link(),
-            "items": data
-        })
-        
-
 class EquipmentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = EquipmentType.objects.all()
     serializer_class = EquipmentTypeSerializer
@@ -147,7 +120,3 @@ class EquipmentTypeViewSet(viewsets.ReadOnlyModelViewSet):
             "data": serializer.data
         })
 
-
-class LoginView(TokenObtainPairView):
-    """Так как в проекте по умолчанию все запросы защищены аунтификацией, я переопределил вью для допуска в логину всех пользователей"""
-    permission_classes = [AllowAny]

@@ -12,6 +12,6 @@ router.register('equipment-type', EquipmentTypeViewSet, basename='equipment-type
 
 urlpatterns = [
     path('', include(router.urls)),  
-    path('user/login/', LoginView.as_view(), name='token_obtain_pair'),
+    path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('user/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
